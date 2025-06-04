@@ -1,0 +1,1 @@
+# Arquivo principal que ira chamar o arquivo "chatBot.py" e rodar a aplicação
