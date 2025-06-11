@@ -1,3 +1,5 @@
+# Lógica do chat
+
 import streamlit as st
 import google.generativeai as genai
 import smtplib
@@ -49,7 +51,7 @@ if app_mode == "Chatbot de Cibersegurança":
     st.header("🤖 Fale com o Especialista Virtual")
 
     # Inicializa o modelo Gemini
-    model = genai.GenerativeModel('gemini-2.5-pro-preview-05-06')
+    model = genai.GenerativeModel('gemini-2.0-flash')
 
     # Inicializa o histórico do chat na sessão
     if "chat_history" not in st.session_state:
