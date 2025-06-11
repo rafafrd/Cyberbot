@@ -49,7 +49,7 @@ if app_mode == "Chatbot de Cibersegurança":
     st.header("🤖 Fale com o Especialista Virtual")
 
     # Inicializa o modelo Gemini
-    model = genai.GenerativeModel('gemini-1.5-pro-latest')
+    model = genai.GenerativeModel('gemini-2.0-flash')
 
     # Inicializa o histórico do chat na sessão
     if "chat_history" not in st.session_state:
