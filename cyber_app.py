@@ -410,4 +410,4 @@ elif app_mode == "🎣 Simulador de Phishing":
 
 # --- Footer ---
 st.markdown("---")
-st.markdown('<div style="text-align: center; padding: 2rem; opacity: 0.7;"><p>🛡️ <strong>CyberGuard AI</strong> - Powered by Google Gemini</p></div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; padding: 2rem; opacity: 0.7;"><p>🛡️ <strong>NCTech Cyberbot</strong> - Powered by Google Gemini</p></div>', unsafe_allow_html=True)
