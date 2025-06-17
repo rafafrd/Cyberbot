@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 streamlit 
 python-dotenv 
 google-generativeai
+=======
+streamlit
+google-generativeai
+python-dotenv
+>>>>>>> branch-certa
