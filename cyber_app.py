@@ -8,7 +8,7 @@ from datetime import datetime
 # --- Configuração da Página ---
 st.set_page_config(
     page_title="CyberGuard AI - Assistente de Cibersegurança",
-    page_icon="🛡️",
+    page_icon="🛡️",   
     layout="wide",
     initial_sidebar_state="expanded"
 )
