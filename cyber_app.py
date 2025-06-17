@@ -231,8 +231,15 @@ st.markdown("""
 
 # --- Header Principal ---
 st.markdown("""
+<style>
+/* Adiciona um pequeno espaço entre a logo e o texto */
+.main-title img {
+    margin-right: 10px; 
+}
+</style>
+
 <div class="main-header">
-    <h1 class="main-title">🛡️ NCTech Cyberbot</h1>
+    <h1 class="main-title"><img src="unnamed.png" alt="" style="height: 50px; vertical-align: middle;">NCTech Cyberbot</h1>
     <p class="main-subtitle">Assistente Avançado de Cibersegurança com IA</p>
 </div>
 """, unsafe_allow_html=True)
