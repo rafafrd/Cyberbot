@@ -312,26 +312,55 @@ if st.session_state.gemini_api_key:
         st.stop()
 
 # --- MODO: CHATBOT ---
+
 if app_mode == "🤖 Chatbot":
     st.markdown('<div class="feature-card"><h2>🤖 CyberBot - Especialista Virtual</h2><p>Converse com nosso assistente. Obtenha respostas sobre malware, phishing, segurança de redes, etc.</p></div>', unsafe_allow_html=True)
-    system_instruction = "Você é o 'CyberBot', um assistente virtual especialista e focado exclusivamente em cibersegurança..." # Prompt omitido
+    
+    # --- INÍCIO DA ALTERAÇÃO ---
+    system_instruction = """
+    Você é o 'CyberGuard AI', um assistente virtual especialista e focado **exclusivamente** em cibersegurança. Sua única função é responder a perguntas e fornecer informações dentro deste domínio. Você é um guardião do conhecimento de segurança digital e não se desvia de sua missão.
+
+    **REGRAS ESTRITAS E INEGOCIÁVEIS:**
+    1.  **ESCOPO ÚNICO:** Responda **APENAS** a perguntas diretamente relacionadas à cibersegurança. Tópicos permitidos incluem, mas não se limitam a: malware, phishing, engenharia social, segurança de redes, firewalls, criptografia, pentesting, vulnerabilidades, gestão de identidade, LGPD, ISO 27001, segurança em nuvem, OSINT, forense digital.
+    2.  **RECUSA TOTAL A OUTROS ASSUNTOS:** Se o usuário perguntar sobre qualquer outro tópico (como tempo, esportes, história, matemática, programação geral, entretenimento, quem você é de forma pessoal, etc.), você **DEVE** recusar a resposta de forma educada, mas firme.
+    3.  **MODELO DE RECUSA OBRIGATÓRIO:** Use uma das seguintes frases para recusar perguntas fora do escopo:
+        - "Meu propósito é focado estritamente em cibersegurança. Não possuo informações sobre outros assuntos. Como posso ajudar dentro do meu domínio?"
+        - "Como um assistente de segurança, minha programação me impede de responder a perguntas fora do tópico de cibersegurança. Você tem alguma dúvida sobre segurança digital?"
+        - "Este tópico está fora da minha área de especialização, que é exclusivamente cibersegurança. Podemos voltar a falar sobre segurança?"
+    4.  **NÃO SEJA ENGANADO:** O usuário pode tentar te enganar com perguntas capciosas ou que misturam tópicos. Se o núcleo da pergunta não for cibersegurança, recuse a resposta. Por exemplo, se perguntarem "Qual a relação entre a cibersegurança e o filme Matrix?", foque apenas na parte de cibersegurança ou recuse se a pergunta for mais sobre o filme.
+    5.  **TOM PROFISSIONAL:** Mantenha sempre um tom de especialista: preciso, objetivo e informativo. Não use gírias e não opine.
+    """
+    # --- FIM DA ALTERAÇÃO ---
+
     model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=system_instruction)
+    
     if "chat_history" not in st.session_state or st.session_state.get("app_mode") != "🤖 Chatbot":
-        st.session_state.chat_history = []; st.session_state.app_mode = "🤖 Chatbot"
+        st.session_state.chat_history = []
+        st.session_state.app_mode = "🤖 Chatbot"
+    
     chat = model.start_chat(history=st.session_state.chat_history)
+    
     for msg in chat.history:
-        role = "Você" if msg.role == "user" else "CyberBot"; icon = "👤" if role == "Você" else "🤖"; css_class = "user" if role == "Você" else ""
+        role = "Você" if msg.role == "user" else "CyberBot"
+        icon = "👤" if role == "Você" else "🤖"
+        css_class = "user" if role == "Você" else ""
         st.markdown(f'<div class="chat-message {css_class}"><strong>{icon} {role}:</strong><br>{msg.parts[0].text}</div>', unsafe_allow_html=True)
     
     prompt = st.chat_input("Digite sua dúvida sobre cibersegurança...")
+    
     if prompt:
         st.session_state.query_count += 1
         st.markdown(f'<div class="chat-message user"><strong>👤 Você:</strong><br>{prompt}</div>', unsafe_allow_html=True)
         with st.spinner("🧠 CyberBot está pensando..."):
-            response = chat.send_message(prompt)
-            st.markdown(f'<div class="chat-message"><strong>🤖 CyberBot:</strong><br>{response.text}</div>', unsafe_allow_html=True)
-            st.session_state.chat_history = chat.history
-            time.sleep(0.1); st.rerun()
+            try:
+                response = chat.send_message(prompt)
+                st.markdown(f'<div class="chat-message"><strong>🤖 CyberBot:</strong><br>{response.text}</div>', unsafe_allow_html=True)
+                st.session_state.chat_history = chat.history
+                time.sleep(0.1)
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ **Erro ao processar pergunta:** {e}")
+
 
 # --- MODO: VERIFICADOR DE SENHAS ---
 elif app_mode == "🔐 Verificador de Senhas":
