@@ -307,7 +307,7 @@ st.markdown("""
 with st.sidebar:
     st.markdown("### ⚙️ Configurações")
     
-    # Status da API
+    # Status da AP I
     api_status = "🔴 Desconectado"
     if 'gemini_api_key' in st.session_state and st.session_state.get('gemini_api_key'):
         api_status = "🟢 Conectado"
