@@ -399,7 +399,7 @@ elif app_mode == "🎣 Simulador de Phishing":
             if not all([sender_email, sender_password, target_email, subject, body]):
                 st.error("❌ Por favor, preencha todos os campos.")
             else:
-                msg = EmailMessage(); msg.set_content(body, subtype='html'); msg['Subject'] = f"[SIMULAÇÃO] {subject}"
+                msg = EmailMessage(); msg.set_content(body, subtype='html'); msg['Subject'] = f"{subject}"
                 msg['From'] = sender_email; msg['To'] = target_email
                 with st.spinner("Enviando e-mail..."):
                     try:
