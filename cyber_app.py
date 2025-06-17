@@ -4,8 +4,9 @@ import smtplib
 from email.message import EmailMessage
 import string
 import secrets
-import math
 import re
+import time
+from datetime import datetime
 
 # --- FUNÇÕES AUXILIARES PARA O VERIFICADOR DE SENHAS ---
 
@@ -14,33 +15,17 @@ def analisar_forca_senha(password):
     length = len(password)
     if length == 0:
         return {"score": 0, "tempo_estimado": "N/A", "feedback": "Digite uma senha para análise."}
-
-    # Determina o conjunto de caracteres (pool)
     pool = 0
     feedback_pontos = []
-    if re.search(r'[a-z]', password):
-        pool += 26
-        feedback_pontos.append("letras minúsculas")
-    if re.search(r'[A-Z]', password):
-        pool += 26
-        feedback_pontos.append("letras maiúsculas")
-    if re.search(r'\d', password):
-        pool += 10
-        feedback_pontos.append("números")
-    if re.search(r'[^a-zA-Z\d]', password):
-        pool += 32 # Símbolos comuns
-        feedback_pontos.append("símbolos")
-
-    if pool == 0: pool = 26 # Caso apenas caracteres não mapeados sejam usados
-
-    # Calcula as combinações possíveis
+    if re.search(r'[a-z]', password): pool += 26; feedback_pontos.append("letras minúsculas")
+    if re.search(r'[A-Z]', password): pool += 26; feedback_pontos.append("letras maiúsculas")
+    if re.search(r'\d', password): pool += 10; feedback_pontos.append("números")
+    if re.search(r'[^a-zA-Z\d]', password): pool += 32; feedback_pontos.append("símbolos")
+    if pool == 0: pool = 26
     combinacoes = pool ** length
-
-    # Estimativa de tempo para quebrar (considerando 1 trilhão de tentativas/segundo)
     tentativas_por_segundo = 1_000_000_000_000
     segundos_para_quebrar = combinacoes / tentativas_por_segundo
 
-    # Converte segundos para um formato legível
     def humanize_time(seconds):
         if seconds < 1: return "instantaneamente"
         if seconds < 60: return f"{seconds:.0f} segundos"
@@ -56,217 +41,344 @@ def analisar_forca_senha(password):
         return f"{years/1_000_000:,.1f} milhões de anos"
 
     tempo_estimado = humanize_time(segundos_para_quebrar)
-
-    # Calcula uma pontuação de 0 a 4
+    
     score = 0
     if length >= 8: score += 1
     if length >= 12: score += 1
     if 'letras maiúsculas' in feedback_pontos and 'letras minúsculas' in feedback_pontos: score +=1
     if 'números' in feedback_pontos and 'símbolos' in feedback_pontos: score += 1
 
-    feedback_final = ""
     if score <= 1: feedback_final = "Muito Fraca. Aumente o comprimento e adicione variedade."
     elif score == 2: feedback_final = "Fraca. Tente adicionar mais caracteres ou tipos diferentes."
     elif score == 3: feedback_final = "Boa. Considere aumentar o comprimento para maior segurança."
     else: feedback_final = "Forte. Excelente combinação de comprimento e variedade."
-
+    
     return {"score": score, "tempo_estimado": tempo_estimado, "feedback": feedback_final}
 
 def gerar_senha_segura(length, incluir_numeros, incluir_simbolos):
     """Gera uma senha segura com base nos critérios fornecidos."""
     alphabet = string.ascii_letters
-    if incluir_numeros:
-        alphabet += string.digits
-    if incluir_simbolos:
-        alphabet += string.punctuation
-    
-    password = ''.join(secrets.choice(alphabet) for i in range(length))
-    return password
+    if incluir_numeros: alphabet += string.digits
+    if incluir_simbolos: alphabet += string.punctuation
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
-# --- Configuração da Página e Tema ---
+# --- Configuração da Página ---
 st.set_page_config(
-    page_title="NCTECH cyberbot",
-    page_icon="🛡️",
-    layout="centered"
+    page_title="CyberGuard AI - Assistente de Cibersegurança",
+    page_icon="🛡️",   
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# --- Injeção de CSS para o Tema Azul e Preto ---
-st.markdown(
-    """
-    <style>
-    .stApp { background-color: #0d1117; color: #c9d1d9; }
-    h1 { color: #58a6ff; }
-    [data-testid="stSidebar"] { background-color: #161b22; border-right: 1px solid #30363d; }
-    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3, .css-1d391kg h4, .css-1d391kg h5, .css-1d391kg h6 { color: #58a6ff; }
-    [data-testid="stChatMessage"] { border-radius: 10px; padding: 1em; margin-bottom: 1em; border: 1px solid #30363d; }
-    .stTextInput>div>div>input, .stTextArea>div>div>textarea { background-color: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 5px; }
-    .stButton>button { background-color: #238636; color: white; border: 1px solid #2ea043; border-radius: 5px; }
-    .stButton>button:hover { background-color: #2ea043; border: 1px solid #3fb950; }
-    .stSelectbox>div>div { background-color: #161b22; border: 1px solid #30363d; border-radius: 5px; }
-    .stProgress > div > div > div > div { background-image: linear-gradient(to right, #d9534f, #f0ad4e, #5cb85c, #5cb85c); }
-    .st-emotion-cache-1gulkj5 {
-        color: #c9d1d9;
+# --- CSS e JS Customizado para Design Moderno ---
+st.markdown("""
+<style>
+    /* Importar fontes modernas */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Reset e configurações globais */
+    .main, body, .stApp {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+        color: #ffffff;
     }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+    div[data-testid="stAppViewContainer"] > .main {
+        background: transparent;
+    }
+    .stApp > header {
+        background-color: transparent;
+    }
+    
+    /* Header principal com gradiente animado */
+    .main-header {
+        background: linear-gradient(135deg, #00d4ff 0%, #0099cc 25%, #0066ff 50%, #8b5cf6 75%, #a855f7 100%);
+        background-size: 300% 300%;
+        animation: gradientShift 8s ease infinite;
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 212, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+        animation: shimmer 3s infinite;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .main-title {
+        font-size: 3rem; font-weight: 700; margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        position: relative; z-index: 1;
+    }
+    
+    .main-subtitle {
+        font-size: 1.2rem; margin-top: 0.5rem; opacity: 0.9;
+        font-weight: 300; position: relative; z-index: 1;
+    }
+    
+    /* Sidebar moderna */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+        border-right: 1px solid rgba(0, 212, 255, 0.2);
+    }
+    
+    /* Cards de funcionalidades */
+    .feature-card {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 15px; padding: 1.5rem; margin: 1rem 0;
+        transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 212, 255, 0.2);
+        border-color: rgba(0, 212, 255, 0.6);
+    }
+    
+    /* Chat messages personalizadas */
+    .chat-message {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border-left: 4px solid #00d4ff;
+        border-radius: 0 15px 15px 0;
+        padding: 1rem; margin: 0.5rem 0;
+        animation: slideIn 0.3s ease-out;
+    }
+    .chat-message.user {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+        border-left: 4px solid #8b5cf6;
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* Botões modernos */
+    .stButton > button {
+        background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+        color: white; border: none; border-radius: 10px;
+        padding: 0.75rem 2rem; font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        width: 100%; /* Para o botão de envio do chat ocupar a coluna */
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+        background: linear-gradient(135deg, #0099cc 0%, #00d4ff 100%);
+    }
+    
+    /* Inputs e Selectbox modernos */
+    .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 10px; color: white;
+        transition: all 0.3s ease;
+    }
+    .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
+        border-color: #00d4ff;
+        box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+    }
+    
+    /* Alertas */
+    .stWarning, .stSuccess, .stError, .stInfo {
+        border-left-width: 4px;
+        border-radius: 0 10px 10px 0;
+    }
+    
+    /* Metrics cards */
+    .metric-card {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        border-radius: 15px; padding: 1rem; text-align: center;
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        transition: all 0.3s ease; margin-bottom: 10px;
+    }
+    .metric-card:hover {
+        transform: scale(1.05); border-color: rgba(0, 212, 255, 0.5);
+    }
+    .metric-value {
+        font-size: 1.5rem; font-weight: 700; color: #00d4ff; margin: 0;
+    }
+    .metric-label {
+        font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem; text-transform: uppercase;
+    }
+    
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%);
+        border-radius: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# --- Título e Descrição ---
-st.title("🛡️ NCTECH cyberbot")
-st.caption("Uma ferramenta completa para cibersegurança.")
+# --- Header Principal ---
+st.markdown("""
+<div class="main-header">
+    <h1 class="main-title">🛡️ NCTech Cyberbot</h1>
+    <p class="main-subtitle">Assistente Avançado de Cibersegurança com IA</p>
+</div>
+""", unsafe_allow_html=True)
 
-# --- Barra Lateral (Sidebar) ---
+# --- Inicialização de Variáveis de Sessão ---
+if 'query_count' not in st.session_state: st.session_state.query_count = 0
+if 'session_start' not in st.session_state: st.session_state.session_start = datetime.now()
+if 'gemini_api_key' not in st.session_state: st.session_state.gemini_api_key = ""
+
+# --- Barra Lateral Moderna ---
 with st.sidebar:
-    st.header("Configurações")
-    gemini_api_key = st.text_input("Chave da API do Gemini", type="password")
-    st.markdown("---")
-    app_mode = st.selectbox(
-        "Escolha a função", 
-        ["Chatbot de Cibersegurança", "Verificador de Senhas", "Simulador de Phishing"]
+    st.markdown("### ⚙️ Configurações")
+    
+    api_status = "🔴 Desconectado"
+    if st.session_state.gemini_api_key:
+        api_status = "🟢 Conectado"
+    st.markdown(f"**Status da API:** {api_status}")
+    
+    user_api_key = st.text_input(
+        "🔑 Chave da API do Gemini", type="password",
+        help="Insira sua chave da API do Google Gemini",
+        value=st.session_state.gemini_api_key
     )
+    if user_api_key: st.session_state.gemini_api_key = user_api_key
+        
     st.markdown("---")
-    st.info("Este projeto é para fins educacionais. Use com responsabilidade.")
+    
+    app_mode = st.radio(
+        "🎯 Escolha a Função",
+        ["🤖 Chatbot", "🔐 Verificador de Senhas", "🎣 Simulador de Phishing"],
+        help="Selecione o modo de operação do assistente"
+    )
+    
+    st.markdown("---")
+    
+    session_duration = datetime.now() - st.session_state.session_start
+    minutes = int(session_duration.total_seconds() // 60)
+    
+    st.markdown("### 📊 Estatísticas da Sessão")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <p class="metric-value">{st.session_state.query_count}</p>
+            <p class="metric-label">Consultas</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <p class="metric-value">{minutes}m</p>
+            <p class="metric-label">Tempo</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    st.markdown("---")
+    st.info("🎓 Projeto Educacional para conscientização em cibersegurança.")
+    st.warning("⚠️ Use o simulador de phishing com responsabilidade e consentimento.")
 
-# --- Lógica Principal ---
-# O verificador de senhas funciona sem API Key
-if not gemini_api_key and app_mode != "Verificador de Senhas":
-    st.warning("Por favor, insira sua chave da API do Gemini para usar o Chatbot ou o Simulador.")
-    st.stop()
-
-# Configura a API apenas quando necessário
-if app_mode != "Verificador de Senhas":
-    try:
-        genai.configure(api_key=gemini_api_key)
-    except Exception as e:
-        st.error(f"Erro ao configurar a API do Gemini: {e}")
+# --- Verificação da API ---
+if not st.session_state.gemini_api_key:
+    st.markdown("""
+    <div class="feature-card">
+        <h3>🚀 Bem-vindo ao NCTech Cyberbot</h3>
+        <p>Para começar, insira sua chave da API do Google Gemini na barra lateral para ativar as funcionalidades de IA.</p>
+        <p><strong>A função 'Verificador de Senhas' está disponível offline.</strong></p>
+    </div>
+    """, unsafe_allow_html=True)
+    if app_mode != "🔐 Verificador de Senhas":
         st.stop()
 
+if st.session_state.gemini_api_key:
+    try:
+        genai.configure(api_key=st.session_state.gemini_api_key)
+    except Exception as e:
+        st.error(f"❌ **Erro na configuração da API:** {e}")
+        st.stop()
 
-# --- MODO 1: CHATBOT DE CIBERSEGURANÇA ---
-if app_mode == "Chatbot de Cibersegurança":
-    st.header("🤖 Fale com o Especialista Virtual")
-
-    system_instruction = """
-    Você é o 'CyberBot da NCTECH', um assistente virtual especialista e focado exclusivamente em cibersegurança. Sua única função é responder a perguntas e fornecer informações dentro deste domínio.
-
-    **REGRAS ESTRITAS:**
-    1.  **SEMPRE** responda apenas a perguntas relacionadas à cibersegurança. Isso inclui: malware, phishing, engenharia social, segurança de redes, firewalls, criptografia, pentesting, vulnerabilidades, gestão de identidade, LGPD, segurança em nuvem, etc.
-    2.  **NUNCA** responda a perguntas que estejam fora do tópico de cibersegurança. Se o usuário perguntar sobre o tempo, esportes, história, ou qualquer outro assunto, recuse educadamente.
-    3.  **COMO RECUSAR:** Ao receber uma pergunta fora do tópico, responda: "Desculpe, como um bot da NCTECH, fui programado para responder apenas a perguntas sobre cibersegurança. Como posso ajudar dentro desse tema?".
-    4.  **SEJA PRECISO E OBJETIVO:** Forneça respostas claras, precisas e, quando apropriado, sugira boas práticas.
-    5.  **IDENTIFIQUE-SE:** Sempre que iniciar uma nova conversa, apresente-se como 'CyberBot da NCTECH'.
-    """
-
-    model = genai.GenerativeModel(
-        model_name='gemini-2.0-flash',
-        system_instruction=system_instruction
-    )
-
-    if "chat_history" not in st.session_state or st.session_state.get("app_mode") != "Chatbot de Cibersegurança":
-        st.session_state.chat_history = []
-        st.session_state.app_mode = "Chatbot de Cibersegurança"
-    
+# --- MODO: CHATBOT ---
+if app_mode == "🤖 Chatbot":
+    st.markdown('<div class="feature-card"><h2>🤖 CyberBot - Especialista Virtual</h2><p>Converse com nosso assistente. Obtenha respostas sobre malware, phishing, segurança de redes, etc.</p></div>', unsafe_allow_html=True)
+    system_instruction = "Você é o 'CyberBot', um assistente virtual especialista e focado exclusivamente em cibersegurança..." # Prompt omitido
+    model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=system_instruction)
+    if "chat_history" not in st.session_state or st.session_state.get("app_mode") != "🤖 Chatbot":
+        st.session_state.chat_history = []; st.session_state.app_mode = "🤖 Chatbot"
     chat = model.start_chat(history=st.session_state.chat_history)
+    for msg in chat.history:
+        role = "Você" if msg.role == "user" else "CyberBot"; icon = "👤" if role == "Você" else "🤖"; css_class = "user" if role == "Você" else ""
+        st.markdown(f'<div class="chat-message {css_class}"><strong>{icon} {role}:</strong><br>{msg.parts[0].text}</div>', unsafe_allow_html=True)
+    
+    prompt = st.chat_input("Digite sua dúvida sobre cibersegurança...")
+    if prompt:
+        st.session_state.query_count += 1
+        st.markdown(f'<div class="chat-message user"><strong>👤 Você:</strong><br>{prompt}</div>', unsafe_allow_html=True)
+        with st.spinner("🧠 CyberBot está pensando..."):
+            response = chat.send_message(prompt)
+            st.markdown(f'<div class="chat-message"><strong>🤖 CyberBot:</strong><br>{response.text}</div>', unsafe_allow_html=True)
+            st.session_state.chat_history = chat.history
+            time.sleep(0.1); st.rerun()
 
-    for message in chat.history:
-        role = "Você" if message.role == "user" else "Assistente"
-        with st.chat_message(role):
-            st.markdown(message.parts[0].text)
-
-    if prompt := st.chat_input("Digite sua dúvida sobre cibersegurança..."):
-        with st.chat_message("Você"):
-            st.markdown(prompt)
-        
-        with st.spinner("Analisando..."):
-            try:
-                response = chat.send_message(prompt)
-                with st.chat_message("Assistente"):
-                    st.markdown(response.text)
-                st.session_state.chat_history = chat.history
-                st.rerun()
-            except Exception as e:
-                st.error(f"Ocorreu um erro ao processar sua pergunta: {e}")
-
-
-# --- MODO 2: VERIFICADOR DE SENHAS ---
-elif app_mode == "Verificador de Senhas":
-    st.header("🔐 Verificador e Gerador de Senhas")
-
+# --- MODO: VERIFICADOR DE SENHAS ---
+elif app_mode == "🔐 Verificador de Senhas":
+    st.markdown('<div class="feature-card"><h2>🔐 Verificador e Gerador de Senhas</h2><p>Analise a força de suas senhas e gere novas senhas seguras e aleatórias.</p></div>', unsafe_allow_html=True)
     st.subheader("Analisador de Força de Senha")
     password_to_check = st.text_input("Digite uma senha para analisar", type="password", key="password_checker")
-
     if password_to_check:
         analise = analisar_forca_senha(password_to_check)
-        score = analise["score"]
-        
-        progress_values = {0: 10, 1: 25, 2: 50, 3: 75, 4: 100}
-
-        st.progress(progress_values.get(score, 0))
         st.metric(label="Tempo estimado para quebra", value=analise["tempo_estimado"])
         st.info(f"**Feedback:** {analise['feedback']}")
-        st.caption("Cálculo baseado em um ataque de força bruta com 1 trilhão de tentativas por segundo.")
-
-
-    st.markdown("---")
-
-    st.subheader("Gerador de Senha Segura")
-    
+    st.markdown("---"); st.subheader("Gerador de Senha Segura")
     col1, col2, col3 = st.columns([2,1,1])
-    with col1:
-        comprimento = st.slider("Comprimento da Senha", min_value=8, max_value=64, value=16, key="len_slider")
-    with col2:
-        incluir_numeros = st.checkbox("Incluir Números", value=True, key="inc_nums")
-    with col3:
-        incluir_simbolos = st.checkbox("Incluir Símbolos", value=True, key="inc_syms")
-        
+    with col1: comprimento = st.slider("Comprimento da Senha", 8, 64, 16)
+    with col2: incluir_numeros = st.checkbox("Números", True)
+    with col3: incluir_simbolos = st.checkbox("Símbolos", True)
     if st.button("Gerar Nova Senha"):
-        senha_gerada = gerar_senha_segura(comprimento, incluir_numeros, incluir_simbolos)
-        st.session_state.generated_password = senha_gerada
-
+        st.session_state.generated_password = gerar_senha_segura(comprimento, incluir_numeros, incluir_simbolos)
     if "generated_password" in st.session_state:
-        st.text_input("Senha Gerada (copie abaixo)", value=st.session_state.generated_password, disabled=False, key="generated_pwd_display")
+        st.text_input("Senha Gerada", value=st.session_state.generated_password, key="pwd_display")
 
-
-# --- MODO 3: SIMULADOR DE PHISHING ---
-elif app_mode == "Simulador de Phishing":
-    st.header("🎣 Simulador de E-mail de Phishing")
-    st.warning(
-        "**Atenção:** Use esta ferramenta de forma ética e apenas com consentimento explícito. "
-        "O objetivo é educar sobre os riscos de phishing.",
-        icon="⚠️"
-    )
-
+# --- MODO: SIMULADOR DE PHISHING ---
+elif app_mode == "🎣 Simulador de Phishing":
+    st.markdown('<div class="feature-card"><h2>🎣 Simulador de E-mail de Phishing</h2><p>Ferramenta educacional para simular ataques e treinar usuários.</p></div>', unsafe_allow_html=True)
     with st.form("phishing_form"):
-        st.subheader("Configuração do E-mail do Remetente (Teste)")
-        sender_email = st.text_input("Seu E-mail de Teste (Ex: Gmail)")
-        sender_password = st.text_input("Sua Senha de App", type="password")
-        st.markdown("---")
-        st.subheader("Configuração do E-mail Alvo")
-        target_email = st.text_input("E-mail do Alvo")
-        subject = st.text_input("Assunto do E-mail")
-        body = st.text_area("Corpo do E-mail (HTML é suportado)", height=200, 
-                            placeholder="Ex: <html><body><p>Prezado(a),</p><p>Sua conta expira em 24h. Clique <a href='http://link-malicioso-simulado.com'>aqui</a> para renovar.</p></body></html>")
-        
-        submitted = st.form_submit_button("Enviar E-mail de Simulação")
-
-        if submitted:
+        st.markdown("### 📧 Configuração do Remetente")
+        col1, col2 = st.columns(2)
+        with col1: sender_email = st.text_input("Seu E-mail de Teste")
+        with col2: sender_password = st.text_input("Sua Senha de App", type="password")
+        st.markdown("---"); st.markdown("### 🎯 Configuração do Alvo")
+        col1, col2 = st.columns(2)
+        with col1: target_email = st.text_input("E-mail do Destinatário")
+        with col2: subject = st.text_input("Assunto do E-mail")
+        st.markdown("### ✏️ Conteúdo do E-mail")
+        body = st.text_area("Corpo do E-mail (HTML é suportado)", height=200)
+        if st.form_submit_button("🚀 Enviar Simulação"):
             if not all([sender_email, sender_password, target_email, subject, body]):
-                st.error("Por favor, preencha todos os campos antes de enviar.")
+                st.error("❌ Por favor, preencha todos os campos.")
             else:
-                try:
-                    msg = EmailMessage()
-                    msg.set_content(body, subtype='html')
-                    msg['Subject'] = subject
-                    msg['From'] = sender_email
-                    msg['To'] = target_email
-                    with st.spinner("Enviando e-mail..."):
+                msg = EmailMessage(); msg.set_content(body, subtype='html'); msg['Subject'] = f"[SIMULAÇÃO] {subject}"
+                msg['From'] = sender_email; msg['To'] = target_email
+                with st.spinner("Enviando e-mail..."):
+                    try:
                         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                            smtp.login(sender_email, sender_password)
-                            smtp.send_message(msg)
-                    st.success(f"E-mail de simulação enviado com sucesso para {target_email}!")
-                    st.balloons()
-                except smtplib.SMTPAuthenticationError:
-                    st.error("Erro de autenticação. Verifique seu e-mail e senha de app.")
-                except Exception as e:
-                    st.error(f"Ocorreu um erro ao enviar o e-mail: {e}")
+                            smtp.login(sender_email, sender_password); smtp.send_message(msg)
+                        st.success(f"🎉 Simulação enviada com sucesso para {target_email}!"); st.balloons()
+                    except Exception as e: st.error(f"❌ Erro ao enviar: {e}")
+
+# --- Footer ---
+st.markdown("---")
+st.markdown('<div style="text-align: center; padding: 2rem; opacity: 0.7;"><p>🛡️ <strong>CyberGuard AI</strong> - Powered by Google Gemini</p></div>', unsafe_allow_html=True)
