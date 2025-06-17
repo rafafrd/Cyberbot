@@ -5,6 +5,7 @@ Bem-vindo ao repositório do **Assistente Virtual de Cibersegurança**! Este pro
 ## 🚧 Status do Projeto
 
 > **Em desenvolvimento** – Este é um protótipo/piloto. Funcionalidades estão sendo planejadas e desenvolvidas.
+> Caso queira testar https://cyberbotnctech.streamlit.app/
 
 ## 🎯 Objetivo
 
