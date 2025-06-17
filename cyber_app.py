@@ -4,9 +4,20 @@ import smtplib
 from email.message import EmailMessage
 import string
 import secrets
+import base64
+from pathlib import Path
 import re
 import time
 from datetime import datetime
+
+def img_to_base64(img_path):
+    """Converte uma imagem local para uma string base64"""
+    try:
+        img_bytes = Path(img_path).read_bytes()
+        encoded = base64.b64encode(img_bytes).decode()
+        return f"data:image/png;base64,{encoded}"
+    except FileNotFoundError:
+        return None
 
 # --- FUNÇÕES AUXILIARES PARA O VERIFICADOR DE SENHAS ---
 
@@ -230,19 +241,77 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Header Principal ---
-st.markdown("""
-<style>
-/* Adiciona um pequeno espaço entre a logo e o texto */
-.main-title img {
-    margin-right: 10px; 
-}
-</style>
+# --- CABEÇALHO COM A LOGO ---
+LOGO_PATH = "logo.png"
+logo_base64 = img_to_base64(LOGO_PATH)
 
-<div class="main-header">
-    <h1 class="main-title"><img src="unnamed.png" alt="" style="height: 50px; vertical-align: middle;">NCTech Cyberbot</h1>
-    <p class="main-subtitle">Assistente Avançado de Cibersegurança com IA</p>
-</div>
-""", unsafe_allow_html=True)
+# Verifica se a imagem foi carregada com sucesso
+if logo_base64:
+    # Se a imagem foi encontrada, mostra o cabeçalho com a logo
+    st.markdown(f"""
+    <style>
+    .main-header {{
+        display: flex;
+        flex-direction: column; /* Empilha os itens verticalmente */
+        justify-content: center; /* Centraliza verticalmente */
+        align-items: center;     /* Centraliza horizontalmente */
+        background-color: #0d1117; /* Cor de fundo (opcional) */
+        border: 1px solid #222; /* Borda (opcional) */
+        border-radius: 10px;    /* Cantos arredondados (opcional) */
+        padding: 20px;          /* Espaçamento interno (opcional) */
+        height: 200px;          /* Altura fixa para ver o alinhamento vertical */
+    }}
+    .main-title {{
+        display: flex;
+        align-items: center;
+        color: #FFFFFF; /* Cor do texto do título */
+    }}
+    .main-subtitle {{
+        color: #AAAAAA; /* Cor do texto do subtítulo */
+        font-size: 16px;
+    }}
+    </style>
+    
+    <div class="main-header">
+        <h1 class="main-title">
+            <img src="{logo_base64}" alt="Logo NCTech" style="height: 40px; margin-right: 10px;">
+            Cyberbot
+        </h1>
+        <p class="main-subtitle">Assistente Avançado de Cibersegurança com IA</p>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    # Código alternativo (com o mesmo estilo de centralização)
+    st.markdown("""
+    <style>
+    .main-header {{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #0d1117;
+        border: 1px solid #222;
+        border-radius: 10px;
+        padding: 20px;
+        height: 200px;
+    }}
+    .main-title {{
+        display: flex;
+        align-items: center;
+        color: #FFFFFF;
+    }}
+    .main-subtitle {{
+        color: #AAAAAA;
+        font-size: 16px;
+    }}
+    </style>
+
+    <div class="main-header">
+        <h1 class="main-title">🛡️ NCTech Cyberbot</h1>
+        <p class="main-subtitle">Assistente Avançado de Cibersegurança com IA</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.error(f"Logo não encontrada! Verifique se o arquivo '{LOGO_PATH}' está na mesma pasta do script.")
 
 # --- Inicialização de Variáveis de Sessão ---
 if 'query_count' not in st.session_state: st.session_state.query_count = 0
